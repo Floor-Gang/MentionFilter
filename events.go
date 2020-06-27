@@ -21,7 +21,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 		return
 	}
 
-	// args = [prefix, command]
+	// args = [prefix, command] // Splits on whitespace
 	args := strings.Fields(msg.Content)
 
 	if len(args) < 2 {
@@ -31,11 +31,11 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 	command := args[1]
 
 	if command == "add" {
-		// args = [prefix, request, <name>]
-		if len(args) < 3 {
+		// args = [prefix, add, <mentionID> <regex> <action> <description>]
+		if len(args) < 6 {
 			_, err := s.ChannelMessageSend(
 				msg.ChannelID,
-				fmt.Sprintf("`%s request <the nickname you want>`", botConfig.Prefix),
+				fmt.Sprintf("`%s add <mention ID> <regex> <action (filter | remove)> <description>`", botConfig.Prefix),
 			)
 
 			if err != nil {
@@ -44,9 +44,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 			}
 		}
 
-		regexString := strings.Join(args[2:], " ")
+		mentionid := args[2]
+		regex := args[3]
+		action := args[4]
+		description := strings.Join(args[5:], " ")
 
-		add(s, event, regexString)
+		add(s, event, mentionid, regex, action, description)
 	}
 }
 

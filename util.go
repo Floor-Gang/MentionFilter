@@ -32,6 +32,19 @@ func checkChannel(s *dg.Session) bool {
 	return channel != nil
 }
 
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+func checkRoles(s *dg.Session, member *dg.Member) bool {
+	return stringInSlice(botConfig.leadDevID, member.Roles) || stringInSlice(botConfig.adminID, member.Roles)
+}
+
 func reply(s *dg.Session, event *dg.MessageCreate, message string) {
 	_, err := s.ChannelMessageSend(event.ChannelID, fmt.Sprintf("<@%s> %s", event.Author.ID, message))
 	if err != nil {
