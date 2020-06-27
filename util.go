@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	dg "github.com/bwmarrin/discordgo"
 )
@@ -38,19 +39,57 @@ func reply(s *dg.Session, event *dg.MessageCreate, message string) {
 	}
 }
 
-// This makes an embed with the mention
-func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mention string) (*dg.Message, error) {
-	embed := dg.MessageEmbed{}
-	name := fmt.Sprintf("%s#%s", user.Username, user.Discriminator)
+// This makes an embed with the mentionMessage
+func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMessage *dg.Message) (*dg.Message, error) {
+	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
+	timeStamp := fmt.Sprintf("%s", mentionMessage.Timestamp)
 
-	// Make the embed
-	embed.Author = &dg.MessageEmbedAuthor{
-		Name:    name,
-		IconURL: user.AvatarURL(""),
+	guild, err := s.State.Guild(mentionMessage.GuildID)
+	if err != nil {
+		guild, err = s.Guild(mentionMessage.GuildID)
 	}
-	embed.Color = 0xff0000
-	embed.Description = fmt.Sprintf("")
-	embed.Title = ""
+
+	embed := dg.MessageEmbed{
+		Author: &dg.MessageEmbedAuthor{
+			Name:    mentionMessage.Author.Username,
+			IconURL: mentionMessage.Author.AvatarURL(""),
+		},
+		Color: 0xff0000,
+		Fields: []*dg.MessageEmbedField{
+			&dg.MessageEmbedField{
+				Name:   "Server:",
+				Value:  guild.Name,
+				Inline: true,
+			},
+			&dg.MessageEmbedField{
+				Name:   "Channel:",
+				Value:  fmt.Sprintf("<#%s>", mentionMessage.ChannelID),
+				Inline: true,
+			},
+			&dg.MessageEmbedField{
+				Name:   "Author:",
+				Value:  mentionMessage.Author.Mention(),
+				Inline: true,
+			},
+			&dg.MessageEmbedField{
+				Name:   "Time (UTC):",
+				Value:  timeStamp,
+				Inline: true,
+			},
+			&dg.MessageEmbedField{
+				Name:   "Message Link:",
+				Value:  messageURL,
+				Inline: false,
+			},
+			&dg.MessageEmbedField{
+				Name:   "Message:",
+				Value:  mentionMessage.Content,
+				Inline: false,
+			},
+		},
+		Timestamp: time.Now().Format(time.RFC3339),
+		Title:     "New mention",
+	}
 
 	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)
 
