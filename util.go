@@ -49,7 +49,7 @@ func reply(s *dg.Session, event *dg.MessageCreate, message string) {
 	}
 }
 
-// This makes an embed with the mentionMessage
+// NewMentionEmbed makes an embed with the mentionMessage
 func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMessage *dg.Message) (*dg.Message, error) {
 	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
 	timeStamp := fmt.Sprintf("%s", mentionMessage.Timestamp)
@@ -99,6 +99,37 @@ func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMess
 		},
 		Timestamp: time.Now().Format(time.RFC3339),
 		Title:     "New mention",
+	}
+
+	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)
+
+	if err != nil {
+		report(err)
+		return nil, err
+	}
+
+	return msg, nil
+}
+
+// AllMentionsEmbed makes an embed with all mentions
+func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention) (*dg.Message, error) {
+	EmbedFields := []*dg.MessageEmbedField{}
+	for _, mention := range mentionsSlice {
+		NewField := &dg.MessageEmbedField{
+			Name:   fmt.Sprintf(`Mention ID: %s`, mention.MentionID),
+			Value:  fmt.Sprintf(`Regex: %s\nAction: %s\nDescription: %s`, mention.Regex, mention.Action, mention.Description),
+			Inline: false,
+		}
+
+		EmbedFields = append(EmbedFields, NewField)
+	}
+
+	embed := dg.MessageEmbed{
+		Author:    &dg.MessageEmbedAuthor{},
+		Color:     0xff0000,
+		Fields:    EmbedFields,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Title:     "All mentions",
 	}
 
 	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)

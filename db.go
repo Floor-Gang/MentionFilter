@@ -234,3 +234,13 @@ func (c Controller) hasMentionID(mentionID string) (bool, error) {
 
 	return len(description) > 0, nil
 }
+
+func (c Controller) getAllMentions() (*sql.Rows, error) {
+	rows, err := c.db.Query("SELECT * FROM mentions")
+
+	if err != nil {
+		return rows, err
+	}
+
+	return rows, nil
+}

@@ -217,6 +217,52 @@ func removeMention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
 }
 
 // View all mentions ".mention mentions"
+func mentions(s *dg.Session, event *dg.MessageCreate) {
+	member := event.Member
+	if member == nil {
+		reply(s, event, "Please use this command in a guild.")
+		return
+	}
+
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
+		return
+	}
+
+	if !checkRoles(s, member) {
+		reply(s, event, "You are not allowed to use this command.")
+		return
+	}
+
+	rows, err := controller.getAllMentions()
+	if err != nil {
+		report(err)
+		reply(s, event, "Something went wrong.")
+	} else {
+		var id string
+		var regex string
+		var action string
+		var description string
+		var mentionsSlice []Mention
+
+		for rows.Next() {
+			rows.Scan(&id, &regex, &action, &description)
+			mention := Mention{
+				MentionID:   id,
+				Regex:       regex,
+				Action:      action,
+				Description: description,
+			}
+			mentionsSlice = append(mentionsSlice, mention)
+		}
+
+		_, err := AllMentionsEmbed(s, botConfig.ChannelID, mentionsSlice)
+		if err != nil {
+			report(err)
+			reply(s, event, "Something went wrong.")
+		}
+	}
+}
 
 // View one mention ".mention <id>"
 
