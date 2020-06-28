@@ -12,8 +12,8 @@ func add(s *dg.Session, event *dg.MessageCreate, mentionID string, regex string,
 		return
 	}
 
-	if !checkChannel(s) {
-		reply(s, event, "I can't find my designated channel. Let a developer know.")
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
 		return
 	}
 
@@ -57,8 +57,8 @@ func changeAction(s *dg.Session, event *dg.MessageCreate, mentionID string, acti
 		return
 	}
 
-	if !checkChannel(s) {
-		reply(s, event, "I can't find my designated channel. Let a developer know.")
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
 		return
 	}
 
@@ -100,8 +100,8 @@ func changeRegex(s *dg.Session, event *dg.MessageCreate, mentionID string, regex
 		return
 	}
 
-	if !checkChannel(s) {
-		reply(s, event, "I can't find my designated channel. Let a developer know.")
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
 		return
 	}
 
@@ -143,8 +143,8 @@ func changeDescription(s *dg.Session, event *dg.MessageCreate, mentionID string,
 		return
 	}
 
-	if !checkChannel(s) {
-		reply(s, event, "I can't find my designated channel. Let a developer know.")
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
 		return
 	}
 
@@ -178,9 +178,10 @@ func changeDescription(s *dg.Session, event *dg.MessageCreate, mentionID string,
 	}
 }
 
-// Update mention in db ".mention update <id> <new regex>"
+// // Remove mention from db ".mention remove <id>"
+// func removeMention(s *dg.Session, event *dg.messagecreate, mentionID string) {
 
-// Remove mention from db ".mention remove <id>"
+// }
 
 // View all mentions ".mention mentions"
 

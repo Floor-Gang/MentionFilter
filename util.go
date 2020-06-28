@@ -21,15 +21,12 @@ func report(err error) {
 	log.Printf("An error occurred %s\n", err)
 }
 
-func checkChannel(s *dg.Session) bool {
-	channel, err := s.Channel(botConfig.ChannelID)
-
-	if err != nil {
-		report(err)
-		return false
+func checkChannel(s *dg.Session, commandMessage *dg.Message) bool {
+	if commandMessage.ChannelID == botConfig.ChannelID {
+		return true
 	}
 
-	return channel != nil
+	return false
 }
 
 func stringInSlice(a string, list []string) bool {
