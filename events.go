@@ -135,6 +135,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 
 		removeMention(s, event, mentionid)
 	}
+
+	if command == "mentions" {
+		// args = [prefix, mentions]
+		mentions(s, event)
+	}
+
 }
 
 func onReady(s *dg.Session, _ *dg.Ready) {
