@@ -3,16 +3,19 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	dg "github.com/bwmarrin/discordgo"
 )
 
 func onMessage(s *dg.Session, event *dg.MessageCreate) {
+	var allFilters []FilterableMention
 	msg := event.Message
+	counter := 0
 
-	// Ignore messages that don't start with the prefix & aren't in a guild
-	if !strings.HasPrefix(msg.Content, botConfig.Prefix) || len(event.GuildID) == 0 {
+	// Ignore messages that aren't in a guild
+	if len(event.GuildID) == 0 {
 		return
 	}
 
@@ -48,6 +51,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
+			counter = 1
 			mentionid := args[2]
 			regex := args[3]
 			action := args[4]
@@ -70,6 +74,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
+			counter = 1
 			mentionid := args[2]
 			action := args[3]
 
@@ -90,6 +95,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
+			counter = 1
 			mentionid := args[2]
 			regex := args[3]
 
@@ -110,6 +116,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
+			counter = 1
 			mentionid := args[2]
 			description := strings.Join(args[3:], " ")
 
@@ -130,6 +137,7 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
+			counter = 1
 			mentionid := args[2]
 
 			removeMention(s, event, mentionid)
@@ -158,6 +166,44 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 
 			mention(s, event, mentionid)
 		}
+	}
+
+	if !strings.HasPrefix(msg.Content, botConfig.Prefix) {
+		for _, Filter := range allFilters {
+			re, err := regexp.Compile(Filter.Regex)
+
+			if err != nil {
+				report(err)
+				return
+			}
+
+			result := re.MatchString(msg.Content)
+
+			if result {
+				if Filter.Action == "remove" {
+					s.State.MessageRemove(msg)
+				}
+
+				if Filter.Action == "filter" {
+					msg, err = newMentionEmbed(s, botConfig.ChannelID, event.Author, msg)
+
+					if err != nil {
+						report(err)
+						return
+					}
+				}
+
+				return
+			}
+		}
+	}
+
+	counter--
+
+	if counter == 0 {
+		// reinitiate the regexes
+		allFilters = initiateFilters(s, event)
+		counter = 100
 	}
 }
 

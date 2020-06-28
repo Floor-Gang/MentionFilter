@@ -48,6 +48,14 @@ type PartialDescriptionMention struct {
 	Description string
 }
 
+// FilterableMention structure
+type FilterableMention struct {
+	// Regex
+	Regex string
+	// Action
+	Action string
+}
+
 func initDB() {
 	_, err := os.Create(dbName)
 

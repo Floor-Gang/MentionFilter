@@ -56,6 +56,32 @@ func checkAction(action string) bool {
 	return false
 }
 
+func initiateFilters(s *dg.Session, event *dg.MessageCreate) []FilterableMention {
+	var allFilters []FilterableMention
+
+	rows, err := controller.getAllMentions()
+	if err != nil {
+		report(err)
+		reply(s, event, "Something went wrong.")
+	} else {
+		var id string
+		var regex string
+		var action string
+		var description string
+
+		for rows.Next() {
+			rows.Scan(&id, &regex, &action, &description)
+			filterableMention := FilterableMention{
+				Regex:  regex,
+				Action: action,
+			}
+			allFilters = append(allFilters, filterableMention)
+		}
+	}
+
+	return allFilters
+}
+
 // NewMentionEmbed makes an embed with the mentionMessage
 func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMessage *dg.Message) (*dg.Message, error) {
 	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
