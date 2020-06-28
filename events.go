@@ -21,6 +21,11 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 		return
 	}
 
+	// Decided to leave all command checking at commands.go
+	//  Mainly since this allows me to easily add custom permission handling
+	//  Perhaps even add custom channel handling
+	//  All at a later date
+
 	// args = [prefix, command] // Splits on whitespace
 	args := strings.Fields(msg.Content)
 
