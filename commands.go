@@ -24,6 +24,11 @@ func add(s *dg.Session, event *dg.MessageCreate, mentionID string, regex string,
 		return
 	}
 
+	if !checkAction(action) {
+		reply(s, event, "Variable `<action>` can only be 'filter' or 'remove'")
+		return
+	}
+
 	mentionIDExists, err := controller.hasMentionID(mentionID)
 	if err != nil {
 		report(err)
@@ -66,6 +71,11 @@ func changeAction(s *dg.Session, event *dg.MessageCreate, mentionID string, acti
 
 	if !checkRoles(s, member) {
 		reply(s, event, "You are not allowed to use this command.")
+		return
+	}
+
+	if !checkAction(action) {
+		reply(s, event, "Variable `<action>` can only be 'filter' or 'remove'")
 		return
 	}
 

@@ -157,7 +157,8 @@ func (c Controller) getMention(mentionID string) (Mention, error) {
 }
 
 func (c Controller) updateAction(req PartialActionMention) error {
-	statement, err := c.db.Prepare(
+	tx, _ := c.db.Begin()
+	statement, err := tx.Prepare(
 		`UPDATE mentions
 		 SET action=?
 		 WHERE mention_id=?`,
@@ -169,15 +170,18 @@ func (c Controller) updateAction(req PartialActionMention) error {
 	}
 
 	_, err = statement.Exec(
-		req.MentionID,
 		req.Action,
+		req.MentionID,
 	)
+
+	tx.Commit()
 
 	return err
 }
 
 func (c Controller) updateRegex(req PartialRegexMention) error {
-	statement, err := c.db.Prepare(
+	tx, _ := c.db.Begin()
+	statement, err := tx.Prepare(
 		`UPDATE mentions
 		 SET regex=?
 		 WHERE mention_id=?`,
@@ -189,15 +193,18 @@ func (c Controller) updateRegex(req PartialRegexMention) error {
 	}
 
 	_, err = statement.Exec(
-		req.MentionID,
 		req.Regex,
+		req.MentionID,
 	)
+
+	tx.Commit()
 
 	return err
 }
 
 func (c Controller) updateDescription(req PartialDescriptionMention) error {
-	statement, err := c.db.Prepare(
+	tx, _ := c.db.Begin()
+	statement, err := tx.Prepare(
 		`UPDATE mentions
 		 SET description=?
 		 WHERE mention_id=?`,
@@ -209,9 +216,11 @@ func (c Controller) updateDescription(req PartialDescriptionMention) error {
 	}
 
 	_, err = statement.Exec(
-		req.MentionID,
 		req.Description,
+		req.MentionID,
 	)
+
+	tx.Commit()
 
 	return err
 }

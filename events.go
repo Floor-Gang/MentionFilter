@@ -47,14 +47,14 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+			regex := args[3]
+			action := args[4]
+			description := strings.Join(args[5:], " ")
+
+			add(s, event, mentionid, regex, action, description)
 		}
-
-		mentionid := args[2]
-		regex := args[3]
-		action := args[4]
-		description := strings.Join(args[5:], " ")
-
-		add(s, event, mentionid, regex, action, description)
 	}
 
 	if command == "change_action" {
@@ -69,12 +69,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+			action := args[3]
+
+			changeAction(s, event, mentionid, action)
 		}
-
-		mentionid := args[2]
-		action := args[3]
-
-		changeAction(s, event, mentionid, action)
 	}
 
 	if command == "change_regex" {
@@ -89,12 +89,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+			regex := args[3]
+
+			changeRegex(s, event, mentionid, regex)
 		}
-
-		mentionid := args[2]
-		regex := args[3]
-
-		changeRegex(s, event, mentionid, regex)
 	}
 
 	if command == "change_description" {
@@ -109,12 +109,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+			description := strings.Join(args[3:], " ")
+
+			changeDescription(s, event, mentionid, description)
 		}
-
-		mentionid := args[2]
-		description := strings.Join(args[3:], " ")
-
-		changeDescription(s, event, mentionid, description)
 	}
 
 	if command == "remove" {
@@ -129,11 +129,11 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+
+			removeMention(s, event, mentionid)
 		}
-
-		mentionid := args[2]
-
-		removeMention(s, event, mentionid)
 	}
 
 	if command == "mentions" {
@@ -153,11 +153,11 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				report(err)
 				return
 			}
+		} else {
+			mentionid := args[2]
+
+			mention(s, event, mentionid)
 		}
-
-		mentionid := args[2]
-
-		mention(s, event, mentionid)
 	}
 }
 

@@ -49,6 +49,13 @@ func reply(s *dg.Session, event *dg.MessageCreate, message string) {
 	}
 }
 
+func checkAction(action string) bool {
+	if action == "remove" || action == "filter" {
+		return true
+	}
+	return false
+}
+
 // NewMentionEmbed makes an embed with the mentionMessage
 func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMessage *dg.Message) (*dg.Message, error) {
 	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
@@ -116,8 +123,8 @@ func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention, 
 	EmbedFields := []*dg.MessageEmbedField{}
 	for _, mention := range mentionsSlice {
 		NewField := &dg.MessageEmbedField{
-			Name:   fmt.Sprintf(`Mention ID: %s`, mention.MentionID),
-			Value:  fmt.Sprintf(`Regex: %s\nAction: %s\nDescription: %s`, mention.Regex, mention.Action, mention.Description),
+			Name:   fmt.Sprintf("Mention ID: %s", mention.MentionID),
+			Value:  fmt.Sprintf("Regex: %s\nAction: %s\nDescription: %s", mention.Regex, mention.Action, mention.Description),
 			Inline: false,
 		}
 
