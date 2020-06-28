@@ -178,10 +178,43 @@ func changeDescription(s *dg.Session, event *dg.MessageCreate, mentionID string,
 	}
 }
 
-// // Remove mention from db ".mention remove <id>"
-// func removeMention(s *dg.Session, event *dg.messagecreate, mentionID string) {
+// Remove mention from db ".mention remove <id>"
+func removeMention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
+	member := event.Member
+	if member == nil {
+		reply(s, event, "Please use this command in a guild.")
+		return
+	}
 
-// }
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
+		return
+	}
+
+	if !checkRoles(s, member) {
+		reply(s, event, "You are not allowed to use this command.")
+		return
+	}
+
+	mentionIDExists, err := controller.hasMentionID(mentionID)
+	if err != nil {
+		report(err)
+		reply(s, event, "Something went wrong.")
+		return
+	}
+	if !mentionIDExists {
+		reply(s, event, "A mention with this ID does not yet exist.")
+		return
+	}
+
+	err = controller.removeMention(mentionID)
+	if err != nil {
+		report(err)
+		reply(s, event, "Something went wrong.")
+	} else {
+		reply(s, event, "Mention removed")
+	}
+}
 
 // View all mentions ".mention mentions"
 

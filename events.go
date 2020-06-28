@@ -112,6 +112,24 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 		changeDescription(s, event, mentionid, description)
 	}
 
+	if command == "remove" {
+		// args = [prefix, remove, <mentionID>]
+		if len(args) < 3 {
+			_, err := s.ChannelMessageSend(
+				msg.ChannelID,
+				fmt.Sprintf("`%s remove <mention ID>`", botConfig.Prefix),
+			)
+
+			if err != nil {
+				report(err)
+				return
+			}
+		}
+
+		mentionid := args[2]
+
+		removeMention(s, event, mentionid)
+	}
 }
 
 func onReady(s *dg.Session, _ *dg.Ready) {
