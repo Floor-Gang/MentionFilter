@@ -9,10 +9,19 @@ import (
 	dg "github.com/bwmarrin/discordgo"
 )
 
+var counter = 1
+var allFilters []FilterableMention
+
 func onMessage(s *dg.Session, event *dg.MessageCreate) {
-	var allFilters []FilterableMention
 	msg := event.Message
-	counter := 0
+
+	counter--
+
+	if counter == 0 {
+		// reinitiate the regexes
+		allFilters = initiateFilters(s, event)
+		counter = 100
+	}
 
 	// Ignore messages that aren't in a guild
 	if len(event.GuildID) == 0 {
@@ -22,6 +31,36 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 	// Ignore messages from bots
 	if event.Author.Bot {
 		return
+	}
+
+	if !strings.HasPrefix(msg.Content, botConfig.Prefix) {
+		for _, Filter := range allFilters {
+			re, err := regexp.Compile(Filter.Regex)
+
+			if err != nil {
+				report(err)
+				return
+			}
+
+			result := re.MatchString(msg.Content)
+
+			if result {
+				if Filter.Action == "remove" {
+					s.ChannelMessageDelete(event.ChannelID, event.Message.ID)
+				}
+
+				if Filter.Action == "filter" {
+					msg, err = newMentionEmbed(s, botConfig.ChannelID, event.Author, msg)
+
+					if err != nil {
+						report(err)
+						return
+					}
+				}
+
+				return
+			}
+		}
 	}
 
 	// Decided to leave all command checking at commands.go
@@ -51,13 +90,14 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			counter = 1
 			mentionid := args[2]
 			regex := args[3]
 			action := args[4]
 			description := strings.Join(args[5:], " ")
 
 			add(s, event, mentionid, regex, action, description)
+			allFilters = initiateFilters(s, event)
+			counter = 100
 		}
 	}
 
@@ -74,11 +114,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			counter = 1
 			mentionid := args[2]
 			action := args[3]
 
 			changeAction(s, event, mentionid, action)
+			allFilters = initiateFilters(s, event)
+			counter = 100
 		}
 	}
 
@@ -95,11 +136,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			counter = 1
 			mentionid := args[2]
 			regex := args[3]
 
 			changeRegex(s, event, mentionid, regex)
+			allFilters = initiateFilters(s, event)
+			counter = 100
 		}
 	}
 
@@ -116,11 +158,12 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			counter = 1
 			mentionid := args[2]
 			description := strings.Join(args[3:], " ")
 
 			changeDescription(s, event, mentionid, description)
+			allFilters = initiateFilters(s, event)
+			counter = 100
 		}
 	}
 
@@ -137,10 +180,11 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			counter = 1
 			mentionid := args[2]
 
 			removeMention(s, event, mentionid)
+			allFilters = initiateFilters(s, event)
+			counter = 100
 		}
 	}
 
@@ -166,44 +210,6 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 
 			mention(s, event, mentionid)
 		}
-	}
-
-	if !strings.HasPrefix(msg.Content, botConfig.Prefix) {
-		for _, Filter := range allFilters {
-			re, err := regexp.Compile(Filter.Regex)
-
-			if err != nil {
-				report(err)
-				return
-			}
-
-			result := re.MatchString(msg.Content)
-
-			if result {
-				if Filter.Action == "remove" {
-					s.State.MessageRemove(msg)
-				}
-
-				if Filter.Action == "filter" {
-					msg, err = newMentionEmbed(s, botConfig.ChannelID, event.Author, msg)
-
-					if err != nil {
-						report(err)
-						return
-					}
-				}
-
-				return
-			}
-		}
-	}
-
-	counter--
-
-	if counter == 0 {
-		// reinitiate the regexes
-		allFilters = initiateFilters(s, event)
-		counter = 100
 	}
 }
 
