@@ -141,6 +141,24 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 		mentions(s, event)
 	}
 
+	if command == "mention" {
+		// args = [prefix, mention, <mentionID>]
+		if len(args) < 3 {
+			_, err := s.ChannelMessageSend(
+				msg.ChannelID,
+				fmt.Sprintf("`%s mention <mention ID>`", botConfig.Prefix),
+			)
+
+			if err != nil {
+				report(err)
+				return
+			}
+		}
+
+		mentionid := args[2]
+
+		mention(s, event, mentionid)
+	}
 }
 
 func onReady(s *dg.Session, _ *dg.Ready) {

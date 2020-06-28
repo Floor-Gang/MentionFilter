@@ -112,7 +112,7 @@ func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMess
 }
 
 // AllMentionsEmbed makes an embed with all mentions
-func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention) (*dg.Message, error) {
+func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention, title string) (*dg.Message, error) {
 	EmbedFields := []*dg.MessageEmbedField{}
 	for _, mention := range mentionsSlice {
 		NewField := &dg.MessageEmbedField{
@@ -129,7 +129,7 @@ func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention) 
 		Color:     0xff0000,
 		Fields:    EmbedFields,
 		Timestamp: time.Now().Format(time.RFC3339),
-		Title:     "All mentions",
+		Title:     title,
 	}
 
 	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)

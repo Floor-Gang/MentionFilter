@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	dg "github.com/bwmarrin/discordgo"
 )
 
@@ -256,7 +258,7 @@ func mentions(s *dg.Session, event *dg.MessageCreate) {
 			mentionsSlice = append(mentionsSlice, mention)
 		}
 
-		_, err := AllMentionsEmbed(s, botConfig.ChannelID, mentionsSlice)
+		_, err := AllMentionsEmbed(s, botConfig.ChannelID, mentionsSlice, "All mentions")
 		if err != nil {
 			report(err)
 			reply(s, event, "Something went wrong.")
@@ -265,6 +267,39 @@ func mentions(s *dg.Session, event *dg.MessageCreate) {
 }
 
 // View one mention ".mention <id>"
+func mention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
+	member := event.Member
+	if member == nil {
+		reply(s, event, "Please use this command in a guild.")
+		return
+	}
+
+	if !checkChannel(s, event.Message) {
+		reply(s, event, "I only work in my designated channel.")
+		return
+	}
+
+	if !checkRoles(s, member) {
+		reply(s, event, "You are not allowed to use this command.")
+		return
+	}
+
+	result, err := controller.getMention(mentionID)
+	if err != nil {
+		report(err)
+		reply(s, event, "Something went wrong.")
+	} else {
+		var mentionsSlice []Mention
+
+		mentionsSlice = append(mentionsSlice, result)
+
+		_, err := AllMentionsEmbed(s, botConfig.ChannelID, mentionsSlice, fmt.Sprintf("Mention %s", mentionID))
+		if err != nil {
+			report(err)
+			reply(s, event, "Something went wrong.")
+		}
+	}
+}
 
 // Possibly for later:
 // - Set mention in db to active
