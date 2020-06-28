@@ -24,12 +24,28 @@ type Mention struct {
 	Description string
 }
 
-// PartialMention structure
-type PartialMention struct {
+// PartialActionMention structure
+type PartialActionMention struct {
 	// ID of the mention
 	MentionID string
 	// Action
 	Action string
+}
+
+// PartialRegexMention structure
+type PartialRegexMention struct {
+	// ID of the mention
+	MentionID string
+	// Regex
+	Regex string
+}
+
+// PartialDescriptionMention structure
+type PartialDescriptionMention struct {
+	// ID of the mention
+	MentionID string
+	// Description
+	Description string
 }
 
 func initDB() {
@@ -140,7 +156,7 @@ func (c Controller) getMention(mentionID string) (Mention, error) {
 	return result, nil
 }
 
-func (c Controller) updateMention(req PartialMention) error {
+func (c Controller) updateAction(req PartialActionMention) error {
 	statement, err := c.db.Prepare(
 		`UPDATE mentions
 		 SET action=?
@@ -158,4 +174,63 @@ func (c Controller) updateMention(req PartialMention) error {
 	)
 
 	return err
+}
+
+func (c Controller) updateRegex(req PartialRegexMention) error {
+	statement, err := c.db.Prepare(
+		`UPDATE mentions
+		 SET regex=?
+		 WHERE mention_id=?`,
+	)
+
+	if err != nil {
+		report(err)
+		return nil
+	}
+
+	_, err = statement.Exec(
+		req.MentionID,
+		req.Regex,
+	)
+
+	return err
+}
+
+func (c Controller) updateDescription(req PartialDescriptionMention) error {
+	statement, err := c.db.Prepare(
+		`UPDATE mentions
+		 SET description=?
+		 WHERE mention_id=?`,
+	)
+
+	if err != nil {
+		report(err)
+		return nil
+	}
+
+	_, err = statement.Exec(
+		req.MentionID,
+		req.Description,
+	)
+
+	return err
+}
+
+func (c Controller) hasMentionID(mentionID string) (bool, error) {
+	result, err := c.db.Query(`SELECT description 
+							   FROM mentions 
+							   WHERE mention_id=?`, mentionID)
+	description := ""
+
+	if err != nil {
+		panic(err)
+	}
+
+	for result.Next() {
+		if err := result.Scan(&description); err != nil {
+			return false, err
+		}
+	}
+
+	return len(description) > 0, nil
 }

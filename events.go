@@ -51,6 +51,67 @@ func onMessage(s *dg.Session, event *dg.MessageCreate) {
 
 		add(s, event, mentionid, regex, action, description)
 	}
+
+	if command == "change_action" {
+		// args = [prefix, change_action, <mentionID> <action>]
+		if len(args) < 4 {
+			_, err := s.ChannelMessageSend(
+				msg.ChannelID,
+				fmt.Sprintf("`%s change_action <mention ID> <action (filter | remove)>`", botConfig.Prefix),
+			)
+
+			if err != nil {
+				report(err)
+				return
+			}
+		}
+
+		mentionid := args[2]
+		action := args[3]
+
+		changeAction(s, event, mentionid, action)
+	}
+
+	if command == "change_regex" {
+		// args = [prefix, change_regex, <mentionID> <regex>]
+		if len(args) < 4 {
+			_, err := s.ChannelMessageSend(
+				msg.ChannelID,
+				fmt.Sprintf("`%s change_regex <mention ID> <regex>`", botConfig.Prefix),
+			)
+
+			if err != nil {
+				report(err)
+				return
+			}
+		}
+
+		mentionid := args[2]
+		regex := args[3]
+
+		changeRegex(s, event, mentionid, regex)
+	}
+
+	if command == "change_description" {
+		// args = [prefix, change_description, <mentionID> <description>]
+		if len(args) < 4 {
+			_, err := s.ChannelMessageSend(
+				msg.ChannelID,
+				fmt.Sprintf("`%s change_description <mention ID> <description>`", botConfig.Prefix),
+			)
+
+			if err != nil {
+				report(err)
+				return
+			}
+		}
+
+		mentionid := args[2]
+		description := strings.Join(args[3:], " ")
+
+		changeDescription(s, event, mentionid, description)
+	}
+
 }
 
 func onReady(s *dg.Session, _ *dg.Ready) {
