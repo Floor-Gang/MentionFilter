@@ -28,15 +28,13 @@ func GetConfig(configPath string) Config {
 
 	if err != nil {
 		genConfig(configPath)
-		panic("Please populate the new config file.")
+		log.Fatalln("Failed to read configuration file. " + err.Error())
 	}
 
 	config := Config{}
-	err = yaml.Unmarshal(file, &config)
 
-	if err != nil {
-		log.Println("Failed to read configuration file")
-		panic(err)
+	if err = yaml.Unmarshal(file, &config); err != nil {
+		log.Fatalln("Failed to parse configuration file. " + err.Error())
 	}
 
 	return config
@@ -52,25 +50,18 @@ func genConfig(configPath string) {
 		AdminID:   "",
 	}
 
-	_, err := os.Create(configPath)
-
-	if err != nil {
-		log.Println("Failed to create configuration file")
-		panic(err)
+	if _, err := os.Create(configPath); err != nil {
+		log.Fatalln("Failed to create configuration file. " + err.Error())
 	}
 
 	_, _ = os.Open(configPath)
 	serialized, err := yaml.Marshal(config)
 
 	if err != nil {
-		log.Printf("Failed to serialize config\n%s\n", err)
-		panic(err)
+		log.Fatalln("Failed to serialize config. " + err.Error())
 	}
 
-	err = ioutil.WriteFile(configPath, serialized, 0660)
-
-	if err != nil {
-		log.Println("Failed to write to configuration file")
-		panic(err)
+	if err = ioutil.WriteFile(configPath, serialized, 0660); err != nil {
+		log.Fatalln("Failed to write to configuration file. " + err.Error())
 	}
 }
