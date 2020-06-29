@@ -8,8 +8,8 @@ import (
 	dg "github.com/bwmarrin/discordgo"
 )
 
-// Add mention to the db ".mention add <mentionID> <regex> <action> <description>".
-func (b *Bot) add(event *dg.MessageCreate, mentionID string, regex string, action string, description string) {
+// Add mention to the db ".mention add <regex> <action> <description>".
+func (b *Bot) add(event *dg.MessageCreate, regex string, action string, description string) {
 	member := event.Member
 	if !b.checkChannel(event.Message) {
 		b.reply(event, "I only work in my designated channel.")
@@ -26,25 +26,13 @@ func (b *Bot) add(event *dg.MessageCreate, mentionID string, regex string, actio
 		return
 	}
 
-	mentionIDExists, err := b.controller.HasMentionID(mentionID)
-	if err != nil {
-		internal.Report(err)
-		b.reply(event, "Something went wrong.")
-		return
-	}
-	if mentionIDExists {
-		b.reply(event, "A mention with this ID already exists.")
-		return
-	}
-
-	req := db.Mention{
-		MentionID:   mentionID,
+	req := db.AddMention{
 		Regex:       regex,
 		Action:      action,
 		Description: description,
 	}
 
-	err = b.controller.AddMention(req)
+	err := b.controller.AddMention(req)
 	if err != nil {
 		internal.Report(err)
 		b.reply(event, "Something went wrong.")
@@ -248,7 +236,7 @@ func (b *Bot) mentions(event *dg.MessageCreate) {
 	}
 }
 
-// View one mention ".mention <id>".
+// View one mention ".mention mention <id>".
 func (b *Bot) mention(event *dg.MessageCreate, mentionID string) {
 	member := event.Member
 	if !b.checkChannel(event.Message) {
@@ -258,6 +246,17 @@ func (b *Bot) mention(event *dg.MessageCreate, mentionID string) {
 
 	if !b.checkRoles(member) {
 		b.reply(event, "You are not allowed to use this command.")
+		return
+	}
+
+	mentionIDExists, err := b.controller.HasMentionID(mentionID)
+	if err != nil {
+		internal.Report(err)
+		b.reply(event, "Something went wrong.")
+		return
+	}
+	if !mentionIDExists {
+		b.reply(event, "A mention with this ID does not yet exist.")
 		return
 	}
 
@@ -275,6 +274,15 @@ func (b *Bot) mention(event *dg.MessageCreate, mentionID string) {
 			internal.Report(err)
 			b.reply(event, "Something went wrong.")
 		}
+	}
+}
+
+// Help function
+func (b *Bot) help(event *dg.MessageCreate) {
+	_, err := b.helpEmbed()
+	if err != nil {
+		internal.Report(err)
+		b.reply(event, "Something went wrong.")
 	}
 }
 

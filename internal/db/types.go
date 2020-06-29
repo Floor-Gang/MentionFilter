@@ -23,6 +23,16 @@ type Mention struct {
 	Description string
 }
 
+// AddMention structure.
+type AddMention struct {
+	// Regex pattern
+	Regex string
+	// Action
+	Action string
+	// Description
+	Description string
+}
+
 // PartialActionMention structure.
 type PartialActionMention struct {
 	// ID of the mention

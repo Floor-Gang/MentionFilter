@@ -40,7 +40,7 @@ func GetController(dbName string) *Controller {
 func (c Controller) init() {
 	statement, err := c.db.Prepare(
 		`CREATE TABLE IF NOT EXISTS mentions 
-		(mention_id INT PRIMARY KEY NOT NULL, 
+		(mention_id INTEGER PRIMARY KEY AUTOINCREMENT, 
 		 regex TEXT NOT NULL, 
 		 action TEXT NOT NULL, 
 		 description TEXT NOT NULL);`,
@@ -66,9 +66,9 @@ func (c Controller) RemoveMention(id string) error {
 }
 
 // AddMention allows user to add a filter to the database
-func (c Controller) AddMention(req Mention) error {
+func (c Controller) AddMention(req AddMention) error {
 	statement, err := c.db.Prepare(
-		"INSERT INTO mentions (mention_id, regex, action, description) VALUES (?,?,?,?)",
+		"INSERT INTO mentions (regex, action, description) VALUES (?,?,?)",
 	)
 
 	if err != nil {
@@ -77,7 +77,6 @@ func (c Controller) AddMention(req Mention) error {
 	}
 
 	_, err = statement.Exec(
-		req.MentionID,
 		req.Regex,
 		req.Action,
 		req.Description,

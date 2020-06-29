@@ -24,7 +24,7 @@ func GetConfig(configPath string) Config {
 		panic("Please populate the new config file.")
 	}
 
-	var file, err = ioutil.ReadFile(configPath)
+	file, err := ioutil.ReadFile(configPath)
 
 	if err != nil {
 		genConfig(configPath)
@@ -32,7 +32,7 @@ func GetConfig(configPath string) Config {
 	}
 
 	config := Config{}
-	err = yaml.Unmarshal(file, config)
+	err = yaml.Unmarshal(file, &config)
 
 	if err != nil {
 		log.Println("Failed to read configuration file")

@@ -85,11 +85,11 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 	command := args[1]
 
 	if command == "add" {
-		// args = [prefix, add, <mentionID> <regex> <action> <description>]
-		if len(args) < 6 {
+		// args = [prefix, add, <regex> <action> <description>]
+		if len(args) < 5 {
 			_, err := b.session.ChannelMessageSend(
 				msg.ChannelID,
-				fmt.Sprintf("`%s add <mention ID> <regex> <action (filter | remove)> <description>`", b.config.Prefix),
+				fmt.Sprintf("`%s add <regex> <action (filter | remove)> <description>`", b.config.Prefix),
 			)
 
 			if err != nil {
@@ -97,12 +97,11 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 		} else {
-			mentionID := args[2]
-			regex := args[3]
-			action := args[4]
-			description := strings.Join(args[5:], " ")
+			regex := args[2]
+			action := args[3]
+			description := strings.Join(args[4:], " ")
 
-			b.add(event, mentionID, regex, action, description)
+			b.add(event, regex, action, description)
 			allFilters = b.initiateFilters(event)
 			counter = 100
 		}
@@ -217,6 +216,10 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 
 			b.mention(event, mentionID)
 		}
+	}
+
+	if command == "help" {
+		b.help(event)
 	}
 }
 
