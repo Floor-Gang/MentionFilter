@@ -1,3 +1,4 @@
-/config.yml
-/mentions.db
-/MentionFilter.exe
+config.yml
+mentions.db
+.idea
+.vscode
