@@ -9,11 +9,6 @@ import (
 // Add mention to the db ".mention add <mentionID> <regex> <action> <description>"
 func add(s *dg.Session, event *dg.MessageCreate, mentionID string, regex string, action string, description string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -59,11 +54,6 @@ func add(s *dg.Session, event *dg.MessageCreate, mentionID string, regex string,
 // Change what happens on mention ".mention change_action <id> <type>"
 func changeAction(s *dg.Session, event *dg.MessageCreate, mentionID string, action string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -107,11 +97,6 @@ func changeAction(s *dg.Session, event *dg.MessageCreate, mentionID string, acti
 // Change regex of mention ".mention change_regex <id> <regex>"
 func changeRegex(s *dg.Session, event *dg.MessageCreate, mentionID string, regex string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -150,11 +135,6 @@ func changeRegex(s *dg.Session, event *dg.MessageCreate, mentionID string, regex
 // Change description of mention ".mention change_description <id> <description>"
 func changeDescription(s *dg.Session, event *dg.MessageCreate, mentionID string, description string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -193,11 +173,6 @@ func changeDescription(s *dg.Session, event *dg.MessageCreate, mentionID string,
 // Remove mention from db ".mention remove <id>"
 func removeMention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -231,11 +206,6 @@ func removeMention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
 // View all mentions ".mention mentions"
 func mentions(s *dg.Session, event *dg.MessageCreate) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
@@ -279,11 +249,6 @@ func mentions(s *dg.Session, event *dg.MessageCreate) {
 // View one mention ".mention <id>"
 func mention(s *dg.Session, event *dg.MessageCreate, mentionID string) {
 	member := event.Member
-	if member == nil {
-		reply(s, event, "Please use this command in a guild.")
-		return
-	}
-
 	if !checkChannel(s, event.Message) {
 		reply(s, event, "I only work in my designated channel.")
 		return
