@@ -1,68 +1,33 @@
-package main
+package discord
 
 import (
 	"fmt"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
+	. "github.com/Floor-Gang/MentionFilter/internal"
+	"github.com/Floor-Gang/MentionFilter/internal/db"
 	dg "github.com/bwmarrin/discordgo"
+	"time"
 )
 
-func keepalive() {
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
-}
+// Util struct methods
 
-func report(err error) {
-	log.Printf("An error occurred %s\n", err)
-}
-
-func checkChannel(s *dg.Session, commandMessage *dg.Message) bool {
-	if commandMessage.ChannelID == botConfig.ChannelID {
-		return true
-	}
-
-	return false
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
-func checkRoles(s *dg.Session, member *dg.Member) bool {
-	return stringInSlice(botConfig.leadDevID, member.Roles) || stringInSlice(botConfig.adminID, member.Roles)
-}
-
-func reply(s *dg.Session, event *dg.MessageCreate, message string) {
-	_, err := s.ChannelMessageSend(event.ChannelID, fmt.Sprintf("<@%s> %s", event.Author.ID, message))
+func (b *Bot) reply(event *dg.MessageCreate, message string) {
+	_, err := b.session.ChannelMessageSend(event.ChannelID, fmt.Sprintf("<@%s> %s", event.Author.ID, message))
 	if err != nil {
-		report(err)
+		Report(err)
 	}
 }
 
-func checkAction(action string) bool {
-	if action == "remove" || action == "filter" {
-		return true
-	}
-	return false
+func (b *Bot) checkChannel(commandMessage *dg.Message) bool {
+	return commandMessage.ChannelID == b.config.ChannelID
 }
 
-func initiateFilters(s *dg.Session, event *dg.MessageCreate) []FilterableMention {
-	var allFilters []FilterableMention
+func (b *Bot) initiateFilters(event *dg.MessageCreate) []db.FilterableMention {
+	var allFilters []db.FilterableMention
 
-	rows, err := controller.getAllMentions()
+	rows, err := b.controller.GetAllMentions()
 	if err != nil {
-		report(err)
-		reply(s, event, "Something went wrong.")
+		Report(err)
+		b.reply(event, "Something went wrong.")
 	} else {
 		var id string
 		var regex string
@@ -70,8 +35,8 @@ func initiateFilters(s *dg.Session, event *dg.MessageCreate) []FilterableMention
 		var description string
 
 		for rows.Next() {
-			rows.Scan(&id, &regex, &action, &description)
-			filterableMention := FilterableMention{
+			_ = rows.Scan(&id, &regex, &action, &description)
+			filterableMention := db.FilterableMention{
 				Regex:  regex,
 				Action: action,
 			}
@@ -83,13 +48,16 @@ func initiateFilters(s *dg.Session, event *dg.MessageCreate) []FilterableMention
 }
 
 // NewMentionEmbed makes an embed with the mentionMessage
-func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMessage *dg.Message) (*dg.Message, error) {
+func (b *Bot) newMentionEmbed(mentionMessage *dg.Message) (*dg.Message, error) {
 	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
+	// TODO: Is there a better way to convert?
 	timeStamp := fmt.Sprintf("%s", mentionMessage.Timestamp)
 
-	guild, err := s.State.Guild(mentionMessage.GuildID)
+	guild, err := b.session.State.Guild(mentionMessage.GuildID)
+
 	if err != nil {
-		guild, err = s.Guild(mentionMessage.GuildID)
+		// TODO: Handle this error
+		guild, err = b.session.Guild(mentionMessage.GuildID)
 	}
 
 	embed := dg.MessageEmbed{
@@ -99,32 +67,33 @@ func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMess
 		},
 		Color: 0xff0000,
 		Fields: []*dg.MessageEmbedField{
-			&dg.MessageEmbedField{
-				Name:   "Server:",
+			{
+				Name: "Server:",
+				// guild is possible nil if error above (L61) isn't handled properly
 				Value:  guild.Name,
 				Inline: true,
 			},
-			&dg.MessageEmbedField{
+			{
 				Name:   "Channel:",
 				Value:  fmt.Sprintf("<#%s>", mentionMessage.ChannelID),
 				Inline: true,
 			},
-			&dg.MessageEmbedField{
+			{
 				Name:   "Author:",
 				Value:  mentionMessage.Author.Mention(),
 				Inline: true,
 			},
-			&dg.MessageEmbedField{
+			{
 				Name:   "Time (UTC):",
 				Value:  timeStamp,
 				Inline: true,
 			},
-			&dg.MessageEmbedField{
+			{
 				Name:   "Message Link:",
 				Value:  messageURL,
 				Inline: false,
 			},
-			&dg.MessageEmbedField{
+			{
 				Name:   "Message:",
 				Value:  mentionMessage.Content,
 				Inline: false,
@@ -134,19 +103,31 @@ func newMentionEmbed(s *dg.Session, channelID string, user *dg.User, mentionMess
 		Title:     "New mention",
 	}
 
-	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)
+	msg, err := b.session.ChannelMessageSendEmbed(b.config.ChannelID, &embed)
 
 	if err != nil {
-		report(err)
+		Report(err)
 		return nil, err
 	}
 
 	return msg, nil
 }
 
+func (b *Bot) checkRoles(member *dg.Member) bool {
+	return StringInSlice(b.config.LeadDevID, member.Roles) ||
+		StringInSlice(b.config.AdminID, member.Roles)
+}
+
+func checkAction(action string) bool {
+	if action == "remove" || action == "filter" {
+		return true
+	}
+	return false
+}
+
 // AllMentionsEmbed makes an embed with all mentions
-func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention, title string) (*dg.Message, error) {
-	EmbedFields := []*dg.MessageEmbedField{}
+func (b *Bot) allMentionsEmbed(mentionsSlice []db.Mention, title string) (*dg.Message, error) {
+	var EmbedFields []*dg.MessageEmbedField
 	for _, mention := range mentionsSlice {
 		NewField := &dg.MessageEmbedField{
 			Name:   fmt.Sprintf("Mention ID: %s", mention.MentionID),
@@ -165,10 +146,10 @@ func AllMentionsEmbed(s *dg.Session, channelID string, mentionsSlice []Mention, 
 		Title:     title,
 	}
 
-	msg, err := s.ChannelMessageSendEmbed(channelID, &embed)
+	msg, err := b.session.ChannelMessageSendEmbed(b.config.ChannelID, &embed)
 
 	if err != nil {
-		report(err)
+		Report(err)
 		return nil, err
 	}
 

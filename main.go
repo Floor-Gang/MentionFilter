@@ -1,42 +1,29 @@
 package main
 
 import (
-	dg "github.com/bwmarrin/discordgo"
+	"github.com/Floor-Gang/MentionFilter/internal/discord"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 const (
-	version    = "1.0.0"
 	configPath = "./config.yml"
 	dbName     = "mentions.db"
 )
 
-var (
-	botConfig  Config
-	controller *Controller
-)
-
 func main() {
-	var err error
-
-	botConfig = getConfig()
-	if err != nil {
-		panic(err)
-	}
-
-	controller = getController()
-
-	client, err := dg.New("Bot " + botConfig.Token)
+	err := discord.Start(configPath, dbName)
 
 	if err != nil {
-		panic(err)
-	}
-
-	client.AddHandler(onReady)
-	client.AddHandler(onMessage)
-
-	if err = client.Open(); err != nil {
 		panic(err)
 	}
 
 	keepalive()
+}
+
+func keepalive() {
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-sc
 }

@@ -1,79 +1,29 @@
-package main
+package db
 
 import (
-	sql "database/sql"
+	"database/sql"
+	"github.com/Floor-Gang/MentionFilter/internal"
 	"os"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
-// Controller structure
-type Controller struct {
-	db *sql.DB
-}
-
-// Mention structure
-type Mention struct {
-	// ID of the mention
-	MentionID string
-	// Regex pattern
-	Regex string
-	// Action
-	Action string
-	// Description
-	Description string
-}
-
-// PartialActionMention structure
-type PartialActionMention struct {
-	// ID of the mention
-	MentionID string
-	// Action
-	Action string
-}
-
-// PartialRegexMention structure
-type PartialRegexMention struct {
-	// ID of the mention
-	MentionID string
-	// Regex
-	Regex string
-}
-
-// PartialDescriptionMention structure
-type PartialDescriptionMention struct {
-	// ID of the mention
-	MentionID string
-	// Description
-	Description string
-}
-
-// FilterableMention structure
-type FilterableMention struct {
-	// Regex
-	Regex string
-	// Action
-	Action string
-}
-
-func initDB() {
+func initDB(dbName string) {
 	_, err := os.Create(dbName)
 
 	if err != nil {
-		report(err)
+		internal.Report(err)
 		return
 	}
 }
 
-func getController() *Controller {
+func GetController(dbName string) *Controller {
 	if _, err := os.Stat(dbName); err != nil {
-		initDB()
+		initDB(dbName)
 	}
 
 	db, err := sql.Open("sqlite3", dbName)
 
 	if err != nil {
-		report(err)
+		internal.Report(err)
 	}
 
 	controller := Controller{
@@ -103,7 +53,7 @@ func (c Controller) init() {
 	}
 }
 
-func (c Controller) removeMention(id string) error {
+func (c Controller) RemoveMention(id string) error {
 	_, err := c.db.Exec(
 		"DELETE FROM mentions WHERE mention_id=?",
 		id,
@@ -112,13 +62,13 @@ func (c Controller) removeMention(id string) error {
 	return err
 }
 
-func (c Controller) addMention(req Mention) error {
+func (c Controller) AddMention(req Mention) error {
 	statement, err := c.db.Prepare(
 		"INSERT INTO mentions (mention_id, regex, action, description) VALUES (?,?,?,?)",
 	)
 
 	if err != nil {
-		report(err)
+		internal.Report(err)
 		return nil
 	}
 
@@ -132,7 +82,7 @@ func (c Controller) addMention(req Mention) error {
 	return err
 }
 
-func (c Controller) getMention(mentionID string) (Mention, error) {
+func (c Controller) GetMention(mentionID string) (Mention, error) {
 	statement, err := c.db.Prepare(
 		`SELECT * FROM mentions WHERE mention_id=?`,
 	)
@@ -164,7 +114,7 @@ func (c Controller) getMention(mentionID string) (Mention, error) {
 	return result, nil
 }
 
-func (c Controller) updateAction(req PartialActionMention) error {
+func (c Controller) UpdateAction(req PartialActionMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
 		`UPDATE mentions
@@ -173,21 +123,22 @@ func (c Controller) updateAction(req PartialActionMention) error {
 	)
 
 	if err != nil {
-		report(err)
-		return nil
+		internal.Report(err)
+		return err
 	}
 
+	// TODO: Handle this error
 	_, err = statement.Exec(
 		req.Action,
 		req.MentionID,
 	)
 
-	tx.Commit()
+	err = tx.Commit()
 
 	return err
 }
 
-func (c Controller) updateRegex(req PartialRegexMention) error {
+func (c Controller) UpdateRegex(req PartialRegexMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
 		`UPDATE mentions
@@ -196,8 +147,8 @@ func (c Controller) updateRegex(req PartialRegexMention) error {
 	)
 
 	if err != nil {
-		report(err)
-		return nil
+		internal.Report(err)
+		return err
 	}
 
 	_, err = statement.Exec(
@@ -205,12 +156,12 @@ func (c Controller) updateRegex(req PartialRegexMention) error {
 		req.MentionID,
 	)
 
-	tx.Commit()
+	err = tx.Commit()
 
 	return err
 }
 
-func (c Controller) updateDescription(req PartialDescriptionMention) error {
+func (c Controller) UpdateDescription(req PartialDescriptionMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
 		`UPDATE mentions
@@ -219,28 +170,29 @@ func (c Controller) updateDescription(req PartialDescriptionMention) error {
 	)
 
 	if err != nil {
-		report(err)
-		return nil
+		internal.Report(err)
+		return err
 	}
 
+	// TODO: Handle this error
 	_, err = statement.Exec(
 		req.Description,
 		req.MentionID,
 	)
 
-	tx.Commit()
+	err = tx.Commit()
 
 	return err
 }
 
-func (c Controller) hasMentionID(mentionID string) (bool, error) {
+func (c Controller) HasMentionID(mentionID string) (bool, error) {
 	result, err := c.db.Query(`SELECT description 
 							   FROM mentions 
 							   WHERE mention_id=?`, mentionID)
 	description := ""
 
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 
 	for result.Next() {
@@ -252,7 +204,7 @@ func (c Controller) hasMentionID(mentionID string) (bool, error) {
 	return len(description) > 0, nil
 }
 
-func (c Controller) getAllMentions() (*sql.Rows, error) {
+func (c Controller) GetAllMentions() (*sql.Rows, error) {
 	rows, err := c.db.Query("SELECT * FROM mentions")
 
 	if err != nil {
