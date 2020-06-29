@@ -2,10 +2,11 @@ package discord
 
 import (
 	"fmt"
-	. "github.com/Floor-Gang/MentionFilter/internal"
+	"time"
+
+	"github.com/Floor-Gang/MentionFilter/internal"
 	"github.com/Floor-Gang/MentionFilter/internal/db"
 	dg "github.com/bwmarrin/discordgo"
-	"time"
 )
 
 // Util struct methods
@@ -13,7 +14,7 @@ import (
 func (b *Bot) reply(event *dg.MessageCreate, message string) {
 	_, err := b.session.ChannelMessageSend(event.ChannelID, fmt.Sprintf("<@%s> %s", event.Author.ID, message))
 	if err != nil {
-		Report(err)
+		internal.Report(err)
 	}
 }
 
@@ -26,7 +27,7 @@ func (b *Bot) initiateFilters(event *dg.MessageCreate) []db.FilterableMention {
 
 	rows, err := b.controller.GetAllMentions()
 	if err != nil {
-		Report(err)
+		internal.Report(err)
 		b.reply(event, "Something went wrong.")
 	} else {
 		var id string
@@ -50,14 +51,17 @@ func (b *Bot) initiateFilters(event *dg.MessageCreate) []db.FilterableMention {
 // NewMentionEmbed makes an embed with the mentionMessage
 func (b *Bot) newMentionEmbed(mentionMessage *dg.Message) (*dg.Message, error) {
 	messageURL := fmt.Sprintf("https://discordapp.com/channels/%s/%s/%s", mentionMessage.GuildID, mentionMessage.ChannelID, mentionMessage.ID)
-	// TODO: Is there a better way to convert?
 	timeStamp := fmt.Sprintf("%s", mentionMessage.Timestamp)
 
 	guild, err := b.session.State.Guild(mentionMessage.GuildID)
 
 	if err != nil {
-		// TODO: Handle this error
 		guild, err = b.session.Guild(mentionMessage.GuildID)
+
+		if err != nil {
+			internal.Report(err)
+			return &dg.Message{}, err
+		}
 	}
 
 	embed := dg.MessageEmbed{
@@ -68,8 +72,7 @@ func (b *Bot) newMentionEmbed(mentionMessage *dg.Message) (*dg.Message, error) {
 		Color: 0xff0000,
 		Fields: []*dg.MessageEmbedField{
 			{
-				Name: "Server:",
-				// guild is possible nil if error above (L61) isn't handled properly
+				Name:   "Server:",
 				Value:  guild.Name,
 				Inline: true,
 			},
@@ -106,7 +109,7 @@ func (b *Bot) newMentionEmbed(mentionMessage *dg.Message) (*dg.Message, error) {
 	msg, err := b.session.ChannelMessageSendEmbed(b.config.ChannelID, &embed)
 
 	if err != nil {
-		Report(err)
+		internal.Report(err)
 		return nil, err
 	}
 
@@ -114,8 +117,8 @@ func (b *Bot) newMentionEmbed(mentionMessage *dg.Message) (*dg.Message, error) {
 }
 
 func (b *Bot) checkRoles(member *dg.Member) bool {
-	return StringInSlice(b.config.LeadDevID, member.Roles) ||
-		StringInSlice(b.config.AdminID, member.Roles)
+	return internal.StringInSlice(b.config.LeadDevID, member.Roles) ||
+		internal.StringInSlice(b.config.AdminID, member.Roles)
 }
 
 func checkAction(action string) bool {
@@ -149,7 +152,7 @@ func (b *Bot) allMentionsEmbed(mentionsSlice []db.Mention, title string) (*dg.Me
 	msg, err := b.session.ChannelMessageSendEmbed(b.config.ChannelID, &embed)
 
 	if err != nil {
-		Report(err)
+		internal.Report(err)
 		return nil, err
 	}
 

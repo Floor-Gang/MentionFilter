@@ -2,3 +2,4 @@ config.yml
 mentions.db
 .idea
 .vscode
+MentionFilter.exe

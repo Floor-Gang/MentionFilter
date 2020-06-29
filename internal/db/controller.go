@@ -2,8 +2,9 @@ package db
 
 import (
 	"database/sql"
-	"github.com/Floor-Gang/MentionFilter/internal"
 	"os"
+
+	"github.com/Floor-Gang/MentionFilter/internal"
 )
 
 func initDB(dbName string) {
@@ -15,6 +16,7 @@ func initDB(dbName string) {
 	}
 }
 
+// GetController acquires controller
 func GetController(dbName string) *Controller {
 	if _, err := os.Stat(dbName); err != nil {
 		initDB(dbName)
@@ -53,6 +55,7 @@ func (c Controller) init() {
 	}
 }
 
+// RemoveMention allows user to remove a filter from the database
 func (c Controller) RemoveMention(id string) error {
 	_, err := c.db.Exec(
 		"DELETE FROM mentions WHERE mention_id=?",
@@ -62,6 +65,7 @@ func (c Controller) RemoveMention(id string) error {
 	return err
 }
 
+// AddMention allows user to add a filter to the database
 func (c Controller) AddMention(req Mention) error {
 	statement, err := c.db.Prepare(
 		"INSERT INTO mentions (mention_id, regex, action, description) VALUES (?,?,?,?)",
@@ -82,6 +86,7 @@ func (c Controller) AddMention(req Mention) error {
 	return err
 }
 
+// GetMention retrieves a single mention based on ID
 func (c Controller) GetMention(mentionID string) (Mention, error) {
 	statement, err := c.db.Prepare(
 		`SELECT * FROM mentions WHERE mention_id=?`,
@@ -114,6 +119,7 @@ func (c Controller) GetMention(mentionID string) (Mention, error) {
 	return result, nil
 }
 
+// UpdateAction allows user to update action of a mention
 func (c Controller) UpdateAction(req PartialActionMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
@@ -127,17 +133,22 @@ func (c Controller) UpdateAction(req PartialActionMention) error {
 		return err
 	}
 
-	// TODO: Handle this error
 	_, err = statement.Exec(
 		req.Action,
 		req.MentionID,
 	)
+
+	if err != nil {
+		internal.Report(err)
+		return err
+	}
 
 	err = tx.Commit()
 
 	return err
 }
 
+// UpdateRegex allows user to update regex of a mention
 func (c Controller) UpdateRegex(req PartialRegexMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
@@ -161,6 +172,7 @@ func (c Controller) UpdateRegex(req PartialRegexMention) error {
 	return err
 }
 
+// UpdateDescription allows user to update description of a mention
 func (c Controller) UpdateDescription(req PartialDescriptionMention) error {
 	tx, _ := c.db.Begin()
 	statement, err := tx.Prepare(
@@ -174,17 +186,22 @@ func (c Controller) UpdateDescription(req PartialDescriptionMention) error {
 		return err
 	}
 
-	// TODO: Handle this error
 	_, err = statement.Exec(
 		req.Description,
 		req.MentionID,
 	)
+
+	if err != nil {
+		internal.Report(err)
+		return err
+	}
 
 	err = tx.Commit()
 
 	return err
 }
 
+// HasMentionID checks if a filter in the database exists
 func (c Controller) HasMentionID(mentionID string) (bool, error) {
 	result, err := c.db.Query(`SELECT description 
 							   FROM mentions 
@@ -204,6 +221,7 @@ func (c Controller) HasMentionID(mentionID string) (bool, error) {
 	return len(description) > 0, nil
 }
 
+// GetAllMentions acquires all mentions in the database
 func (c Controller) GetAllMentions() (*sql.Rows, error) {
 	rows, err := c.db.Query("SELECT * FROM mentions")
 

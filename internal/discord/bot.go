@@ -6,6 +6,7 @@ import (
 	dg "github.com/bwmarrin/discordgo"
 )
 
+// Bot structure
 type Bot struct {
 	version    string
 	session    *dg.Session
@@ -13,6 +14,7 @@ type Bot struct {
 	controller *db.Controller
 }
 
+// Start starts discord client, configuration and database
 func Start(configPath string, dbName string) error {
 	var err error
 	botConfig := internal.GetConfig(configPath)

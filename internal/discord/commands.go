@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+
 	"github.com/Floor-Gang/MentionFilter/internal"
 	"github.com/Floor-Gang/MentionFilter/internal/db"
 	dg "github.com/bwmarrin/discordgo"
@@ -229,7 +230,6 @@ func (b *Bot) mentions(event *dg.MessageCreate) {
 		var mentionsSlice []db.Mention
 
 		for rows.Next() {
-			// TODO: Handle this error
 			rows.Scan(&id, &regex, &action, &description)
 			mention := db.Mention{
 				MentionID:   id,

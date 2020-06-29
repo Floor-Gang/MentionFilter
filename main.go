@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/Floor-Gang/MentionFilter/internal/discord"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Floor-Gang/MentionFilter/internal/discord"
 )
 
 const (

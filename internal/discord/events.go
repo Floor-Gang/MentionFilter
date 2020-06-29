@@ -2,12 +2,13 @@ package discord
 
 import (
 	"fmt"
-	"github.com/Floor-Gang/MentionFilter/internal"
-	"github.com/Floor-Gang/MentionFilter/internal/db"
-	dg "github.com/bwmarrin/discordgo"
 	"log"
 	"regexp"
 	"strings"
+
+	"github.com/Floor-Gang/MentionFilter/internal"
+	"github.com/Floor-Gang/MentionFilter/internal/db"
+	dg "github.com/bwmarrin/discordgo"
 )
 
 var counter = 1
@@ -47,8 +48,12 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 
 			if result {
 				if Filter.Action == "remove" {
-					// TODO: Handle this error
-					b.session.ChannelMessageDelete(event.ChannelID, event.Message.ID)
+					err = b.session.ChannelMessageDelete(event.ChannelID, event.Message.ID)
+
+					if err != nil {
+						internal.Report(err)
+						return
+					}
 				}
 
 				if Filter.Action == "filter" {

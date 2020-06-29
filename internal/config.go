@@ -1,10 +1,11 @@
 package internal
 
 import (
-	"github.com/go-yaml/yaml"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/go-yaml/yaml"
 )
 
 // Config structure.
@@ -16,7 +17,7 @@ type Config struct {
 	AdminID   string `yaml:"admin"`
 }
 
-// Retrieve a configuration.
+// GetConfig retrieves a configuration.
 func GetConfig(configPath string) Config {
 	if _, err := os.Stat(configPath); err != nil {
 		genConfig(configPath)
