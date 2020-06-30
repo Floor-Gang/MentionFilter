@@ -44,7 +44,7 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 				return
 			}
 
-			result := re.MatchString(msg.Content)
+			result := re.MatchString(strings.ToLower(msg.Content))
 
 			if result {
 				if Filter.Action == "remove" {
@@ -75,154 +75,157 @@ func (b *Bot) onMessage(_ *dg.Session, event *dg.MessageCreate) {
 	//  Perhaps even add custom channel handling
 	//  All at a later date
 
-	// args = [prefix, command] // Splits on whitespace
-	args := strings.Fields(msg.Content)
+	if strings.HasPrefix(msg.Content, b.config.Prefix) {
 
-	if len(args) < 2 {
-		return
-	}
+		// args = [prefix, command] // Splits on whitespace
+		args := strings.Fields(msg.Content)
 
-	command := args[1]
-
-	if command == "add" {
-		// args = [prefix, add, <regex> <action> <description>]
-		if len(args) < 5 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s add <regex> <action (filter | remove)> <description>`", b.config.Prefix),
-			)
-
-			if err != nil {
-				internal.Report(err)
-				return
-			}
-		} else {
-			regex := args[2]
-			action := args[3]
-			description := strings.Join(args[4:], " ")
-
-			b.add(event, regex, action, description)
-			allFilters = b.initiateFilters(event)
-			counter = 100
+		if len(args) < 2 {
+			return
 		}
-	}
 
-	if command == "change_action" {
-		// args = [prefix, change_action, <mentionID> <action>]
-		if len(args) < 4 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s change_action <mention ID> <action (filter | remove)>`", b.config.Prefix),
-			)
+		command := args[1]
 
-			if err != nil {
-				internal.Report(err)
-				return
+		if command == "add" {
+			// args = [prefix, add, <regex> <action> <description>]
+			if len(args) < 5 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s add <regex> <action (filter | remove)> <description>`", b.config.Prefix),
+				)
+
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				regex := args[2]
+				action := args[3]
+				description := strings.Join(args[4:], " ")
+
+				b.add(event, regex, action, description)
+				allFilters = b.initiateFilters(event)
+				counter = 100
 			}
-		} else {
-			mentionID := args[2]
-			action := args[3]
-
-			b.changeAction(event, mentionID, action)
-			allFilters = b.initiateFilters(event)
-			counter = 100
 		}
-	}
 
-	if command == "change_regex" {
-		// args = [prefix, change_regex, <mentionID> <regex>]
-		if len(args) < 4 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s change_regex <mention ID> <regex>`", b.config.Prefix),
-			)
+		if command == "change_action" {
+			// args = [prefix, change_action, <mentionID> <action>]
+			if len(args) < 4 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s change_action <mention ID> <action (filter | remove)>`", b.config.Prefix),
+				)
 
-			if err != nil {
-				internal.Report(err)
-				return
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				mentionID := args[2]
+				action := args[3]
+
+				b.changeAction(event, mentionID, action)
+				allFilters = b.initiateFilters(event)
+				counter = 100
 			}
-		} else {
-			mentionID := args[2]
-			regex := args[3]
-
-			b.changeRegex(event, mentionID, regex)
-			allFilters = b.initiateFilters(event)
-			counter = 100
 		}
-	}
 
-	if command == "change_description" {
-		// args = [prefix, change_description, <mentionID> <description>]
-		if len(args) < 4 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s change_description <mention ID> <description>`", b.config.Prefix),
-			)
+		if command == "change_regex" {
+			// args = [prefix, change_regex, <mentionID> <regex>]
+			if len(args) < 4 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s change_regex <mention ID> <regex>`", b.config.Prefix),
+				)
 
-			if err != nil {
-				internal.Report(err)
-				return
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				mentionID := args[2]
+				regex := args[3]
+
+				b.changeRegex(event, mentionID, regex)
+				allFilters = b.initiateFilters(event)
+				counter = 100
 			}
-		} else {
-			mentionID := args[2]
-			description := strings.Join(args[3:], " ")
-
-			b.changeDescription(event, mentionID, description)
-			allFilters = b.initiateFilters(event)
-			counter = 100
 		}
-	}
 
-	if command == "remove" {
-		// args = [prefix, remove, <mentionID>]
-		if len(args) < 3 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s remove <mention ID>`", b.config.Prefix),
-			)
+		if command == "change_description" {
+			// args = [prefix, change_description, <mentionID> <description>]
+			if len(args) < 4 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s change_description <mention ID> <description>`", b.config.Prefix),
+				)
 
-			if err != nil {
-				internal.Report(err)
-				return
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				mentionID := args[2]
+				description := strings.Join(args[3:], " ")
+
+				b.changeDescription(event, mentionID, description)
+				allFilters = b.initiateFilters(event)
+				counter = 100
 			}
-		} else {
-			mentionID := args[2]
-
-			b.removeMention(event, mentionID)
-			allFilters = b.initiateFilters(event)
-			counter = 100
 		}
-	}
 
-	if command == "mentions" {
-		// args = [prefix, mentions]
-		b.mentions(event)
-	}
+		if command == "remove" {
+			// args = [prefix, remove, <mentionID>]
+			if len(args) < 3 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s remove <mention ID>`", b.config.Prefix),
+				)
 
-	if command == "mention" {
-		// args = [prefix, mention, <mentionID>]
-		if len(args) < 3 {
-			_, err := b.session.ChannelMessageSend(
-				msg.ChannelID,
-				fmt.Sprintf("`%s mention <mention ID>`", b.config.Prefix),
-			)
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				mentionID := args[2]
 
-			if err != nil {
-				internal.Report(err)
-				return
+				b.removeMention(event, mentionID)
+				allFilters = b.initiateFilters(event)
+				counter = 100
 			}
-		} else {
-			mentionID := args[2]
-
-			b.mention(event, mentionID)
 		}
-	}
 
-	if command == "help" {
-		b.help(event)
+		if command == "mentions" {
+			// args = [prefix, mentions]
+			b.mentions(event)
+		}
+
+		if command == "mention" {
+			// args = [prefix, mention, <mentionID>]
+			if len(args) < 3 {
+				_, err := b.session.ChannelMessageSend(
+					msg.ChannelID,
+					fmt.Sprintf("`%s mention <mention ID>`", b.config.Prefix),
+				)
+
+				if err != nil {
+					internal.Report(err)
+					return
+				}
+			} else {
+				mentionID := args[2]
+
+				b.mention(event, mentionID)
+			}
+		}
+
+		if command == "help" {
+			b.help(event)
+		}
 	}
 }
 
 func (b *Bot) onReady(s *dg.Session, _ *dg.Ready) {
-	log.Printf("Ready as %s (version %s)\n", s.State.User.Username, b.version)
+	log.Printf("Ready as %s\n", s.State.User.Username)
 }
