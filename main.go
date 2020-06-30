@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -15,13 +14,7 @@ const (
 )
 
 func main() {
-	dirPath, err := os.Getwd()
-
-	if err != nil {
-		panic(err)
-	}
-
-	err = discord.Start(fmt.Sprintf("%s\\config.yml", dirPath), dbName)
+	err := discord.Start(configPath, dbName)
 
 	if err != nil {
 		panic(err)

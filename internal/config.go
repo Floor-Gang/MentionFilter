@@ -54,7 +54,6 @@ func genConfig(configPath string) {
 		log.Fatalln("Failed to create configuration file. " + err.Error())
 	}
 
-	_, _ = os.Open(configPath)
 	serialized, err := yaml.Marshal(config)
 
 	if err != nil {
